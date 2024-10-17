@@ -1,31 +1,30 @@
-const fs = require('fs');
-const path = require('path');
-const filePath = path.join(__dirname, 'messages.json');
+const { MongoClient } = require('mongodb');
+
+const uri = process.env.MONGO_URI;  // Use the environment variable for MongoDB URI
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 exports.handler = async function(event, context) {
     const { date, time, message } = JSON.parse(event.body);
 
-    // Read the existing messages from the file
-    let messages = [];
     try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        messages = JSON.parse(data);
+        await client.connect();
+        const database = client.db('vijayshift');  // Name of your MongoDB database
+        const collection = database.collection('messages');  // Collection to store messages
+
+        const newMessage = { date, time, message };
+        await collection.insertOne(newMessage);
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ success: true })
+        };
     } catch (error) {
-        console.error('Error reading messages file:', error);
+        console.error('Error inserting message:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ success: false, error: 'Error inserting message' })
+        };
+    } finally {
+        await client.close();
     }
-
-    // Add the new message to the array
-    messages.push({ date, time, message });
-
-    // Write the updated messages array back to the file
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(messages, null, 2));
-    } catch (error) {
-        console.error('Error writing messages file:', error);
-    }
-
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true })
-    };
 };
