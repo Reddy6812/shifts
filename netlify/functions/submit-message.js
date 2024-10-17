@@ -10,24 +10,27 @@ async function connectToDatabase(uri) {
     const client = new MongoClient(uri);
     await client.connect();
     cachedClient = client;  // Cache the client for future reuse
+    console.log("Connected to MongoDB");
     return client;
 }
 
 exports.handler = async function(event, context) {
-    const { date, time, message } = JSON.parse(event.body);
-
-    if (!date || !time || !message) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ success: false, error: 'Missing required fields' })
-        };
-    }
-
     try {
+        const { date, time, message } = JSON.parse(event.body);
+
+        if (!date || !time || !message) {
+            console.log("Missing required fields");
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ success: false, error: 'Missing required fields' })
+            };
+        }
+
         const client = await connectToDatabase(process.env.MONGO_URI);
         const database = client.db('vijayshift');  // Your database name
         const collection = database.collection('messages');  // Your collection name
 
+        console.log("Inserting message...");
         const newMessage = { date, time, message };
         await collection.insertOne(newMessage);
 
