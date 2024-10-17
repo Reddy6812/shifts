@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Scheduler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Enter Date, Time, and Message</h1>
+    
+    <!-- User Input Form -->
+    <form id="messageForm">
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br>
+
+        <label for="time">Time:</label>
+        <input type="time" id="time" name="time" required><br>
+
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" required></textarea><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Display Section for Messages -->
+    <h2>Messages</h2>
+    <div id="messageList"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
