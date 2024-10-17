@@ -1,13 +1,23 @@
 const { MongoClient } = require('mongodb');
 
-const uri = process.env.MONGO_URI;  // Use the environment variable for MongoDB URI
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+let cachedClient = null;  // Cache for MongoDB client
+
+async function connectToDatabase(uri) {
+    if (cachedClient) {
+        return cachedClient;
+    }
+
+    const client = new MongoClient(uri);
+    await client.connect();
+    cachedClient = client;  // Cache the client for future reuse
+    return client;
+}
 
 exports.handler = async function(event, context) {
     try {
-        await client.connect();
-        const database = client.db('vijayshift');  // Name of your MongoDB database
-        const collection = database.collection('messages');  // Collection to retrieve messages
+        const client = await connectToDatabase(process.env.MONGO_URI);
+        const database = client.db('vijayshift');  // Your database name
+        const collection = database.collection('messages');  // Your collection name
 
         const messages = await collection.find().toArray();
 
@@ -21,7 +31,5 @@ exports.handler = async function(event, context) {
             statusCode: 500,
             body: JSON.stringify({ success: false, error: 'Error retrieving messages' })
         };
-    } finally {
-        await client.close();
     }
 };

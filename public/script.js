@@ -8,21 +8,28 @@ document.getElementById('messageForm').addEventListener('submit', async function
         message: document.getElementById('message').value
     };
 
-    // Send message data to Netlify Function
-    await fetch('/.netlify/functions/submit-message', {
+    // Send message data to the Netlify Function (submit-message)
+    const response = await fetch('/.netlify/functions/submit-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
     });
 
-    // Reload messages after submission
-    loadMessages();
+    const result = await response.json();
+    console.log('Submit response:', result);
+
+    if (result.success) {
+        loadMessages();  // Reload messages if submission was successful
+    } else {
+        alert('Failed to submit the message');
+    }
 });
 
-// Load messages from the Netlify Function
+// Load messages from the Netlify Function (get-messages)
 async function loadMessages() {
     const response = await fetch('/.netlify/functions/get-messages');
     const messages = await response.json();
+    console.log('Fetched messages:', messages);
 
     const messageList = document.getElementById('messageList');
     messageList.innerHTML = '';
@@ -34,5 +41,5 @@ async function loadMessages() {
     });
 }
 
-// Initially load messages
+// Load messages when the page loads
 loadMessages();

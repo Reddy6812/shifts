@@ -1,15 +1,32 @@
 const { MongoClient } = require('mongodb');
 
-const uri = process.env.MONGO_URI;  // Use the environment variable for MongoDB URI
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+let cachedClient = null;  // Cache for MongoDB client
+
+async function connectToDatabase(uri) {
+    if (cachedClient) {
+        return cachedClient;
+    }
+
+    const client = new MongoClient(uri);
+    await client.connect();
+    cachedClient = client;  // Cache the client for future reuse
+    return client;
+}
 
 exports.handler = async function(event, context) {
     const { date, time, message } = JSON.parse(event.body);
 
+    if (!date || !time || !message) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ success: false, error: 'Missing required fields' })
+        };
+    }
+
     try {
-        await client.connect();
-        const database = client.db('vijayshift');  // Name of your MongoDB database
-        const collection = database.collection('messages');  // Collection to store messages
+        const client = await connectToDatabase(process.env.MONGO_URI);
+        const database = client.db('vijayshift');  // Your database name
+        const collection = database.collection('messages');  // Your collection name
 
         const newMessage = { date, time, message };
         await collection.insertOne(newMessage);
@@ -24,7 +41,5 @@ exports.handler = async function(event, context) {
             statusCode: 500,
             body: JSON.stringify({ success: false, error: 'Error inserting message' })
         };
-    } finally {
-        await client.close();
     }
 };
