@@ -1,18 +1,3 @@
-const { MongoClient } = require('mongodb');
-
-let cachedClient = null;  // Cache for MongoDB client
-
-async function connectToDatabase(uri) {
-    if (cachedClient) {
-        return cachedClient;
-    }
-
-    const client = new MongoClient(uri);
-    await client.connect();
-    cachedClient = client;  // Cache the client for future reuse
-    return client;
-}
-
 exports.handler = async function(event, context) {
     const { userId, name, shiftDate, startTime, endTime, crew, note } = JSON.parse(event.body);
 
